@@ -93,26 +93,91 @@ st.dataframe(styled_overview, height=400)
 
 # Portfolio Overview
 st.header("Portfolio Overview")
-col1, col2, col3 = st.columns(3)
 
 # Get wallet summary
 wallet_summary = st.session_state.trading_system.get_wallet_summary()
 
+# Store previous values in session state if not exist
+if 'last_portfolio_value' not in st.session_state:
+    st.session_state.last_portfolio_value = wallet_summary['total_value']
+if 'highest_portfolio_value' not in st.session_state:
+    st.session_state.highest_portfolio_value = wallet_summary['total_value']
+if 'lowest_portfolio_value' not in st.session_state:
+    st.session_state.lowest_portfolio_value = wallet_summary['total_value']
+
+# Calculate changes
+total_change = wallet_summary['total_value'] - wallet_summary['initial_balance_usd']
+total_change_pct = (total_change / wallet_summary['initial_balance_usd']) * 100
+
+recent_change = wallet_summary['total_value'] - st.session_state.last_portfolio_value
+recent_change_pct = (recent_change / st.session_state.last_portfolio_value) * 100 if st.session_state.last_portfolio_value else 0
+
+# Update session state
+st.session_state.last_portfolio_value = wallet_summary['total_value']
+st.session_state.highest_portfolio_value = max(st.session_state.highest_portfolio_value, wallet_summary['total_value'])
+st.session_state.lowest_portfolio_value = min(st.session_state.lowest_portfolio_value, wallet_summary['total_value'])
+
+# Create columns for metrics
+col1, col2, col3, col4 = st.columns(4)
+
+# Total Portfolio Value with total change
 col1.metric(
     "Total Portfolio Value",
     f"${wallet_summary['total_value']:.2f}",
-    f"{(wallet_summary['total_value'] - wallet_summary['initial_balance_usd']):.2f}"
+    f"{total_change_pct:+.2f}% (${total_change:+.2f})",
+    delta_color="normal"
 )
 
+# Recent change (since last update)
 col2.metric(
-    "Available USD",
-    f"${wallet_summary['current_balance_usd']:.2f}"
+    "Recent Change",
+    f"${wallet_summary['total_value']:.2f}",
+    f"{recent_change_pct:+.2f}% (${recent_change:+.2f})",
+    delta_color="normal"
 )
 
+# Available USD
 col3.metric(
-    "Number of Positions",
-    len(wallet_summary['positions'])
+    "Available USD",
+    f"${wallet_summary['current_balance_usd']:.2f}",
+    f"{len(wallet_summary['positions'])} positions"
 )
+
+# High/Low Indicators
+col4.metric(
+    "Portfolio High/Low",
+    f"H: ${st.session_state.highest_portfolio_value:.2f}",
+    f"L: ${st.session_state.lowest_portfolio_value:.2f}"
+)
+
+# Add a small chart showing portfolio value trend
+if 'portfolio_value_history' not in st.session_state:
+    st.session_state.portfolio_value_history = []
+    st.session_state.portfolio_value_times = []
+
+# Update portfolio history
+current_time = datetime.now()
+st.session_state.portfolio_value_history.append(wallet_summary['total_value'])
+st.session_state.portfolio_value_times.append(current_time)
+
+# Keep only last 100 points
+if len(st.session_state.portfolio_value_history) > 100:
+    st.session_state.portfolio_value_history.pop(0)
+    st.session_state.portfolio_value_times.pop(0)
+
+# Create mini chart
+if len(st.session_state.portfolio_value_history) > 1:
+    fig = px.line(
+        x=st.session_state.portfolio_value_times,
+        y=st.session_state.portfolio_value_history,
+        title="Portfolio Value Trend"
+    )
+    fig.update_layout(
+        showlegend=False,
+        height=200,
+        margin=dict(l=0, r=0, t=30, b=0)
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 # Current Positions
 st.subheader("Current Positions")
