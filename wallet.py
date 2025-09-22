@@ -1,15 +1,25 @@
 import time
 
 class Wallet:
-    def __init__(self, initial_balance_usd=100.0):
-        print(f"Initializing virtual trading wallet with ${initial_balance_usd}")
-        print("NOTE: All trades are simulated with real market data")
-        self.initial_balance_usd = initial_balance_usd
-        self.current_balance_usd = initial_balance_usd
-        self.positions = {}  # Format: {"BTCUSDT": {"amount": 0.001, "avg_price": 45000, "total_cost": 45.0}}
-        self.trade_history = []
+    def __init__(self, initial_balance_usd=100.0, state=None):
+        if state is None:
+            print(f"Initializing virtual trading wallet with ${initial_balance_usd}")
+            print("NOTE: All trades are simulated with real market data")
+            self.initial_balance_usd = initial_balance_usd
+            self.current_balance_usd = initial_balance_usd
+            self.positions = {}  # Format: {"BTCUSDT": {"amount": 0.001, "avg_price": 45000, "total_cost": 45.0}}
+            self.trade_history = []
+            self.start_time = int(time.time() * 1000)  # Track when we started trading
+        else:
+            print("Restoring wallet from saved state")
+            self.initial_balance_usd = state['initial_balance_usd']
+            self.current_balance_usd = state['current_balance_usd']
+            self.positions = state['positions']
+            self.trade_history = state['trade_history']
+            self.start_time = state['start_time']
+            print(f"Restored wallet with ${self.current_balance_usd:.2f} balance and {len(self.positions)} positions")
+            
         self.virtual_mode = True  # Always true as we're using virtual trading
-        self.start_time = int(time.time() * 1000)  # Track when we started trading
         
     def can_execute_trade(self, symbol, side, amount_usd):
         """Check if there's enough balance to execute a trade"""

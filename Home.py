@@ -22,6 +22,15 @@ if 'last_update' not in st.session_state:
 
 # Sidebar
 st.sidebar.title("Trading Controls")
+
+# System Controls
+with st.sidebar.expander("System Controls", expanded=False):
+    if st.button("Reset Trading System"):
+        if st.session_state.trading_system.reset_system():
+            st.session_state.trading_system = TradingSystem(initial_balance_usd=100.0, auto_buy_btc=True)
+            st.rerun()
+
+# Trading Pair Selection
 symbol = st.sidebar.selectbox(
     "Select Trading Pair",
     [

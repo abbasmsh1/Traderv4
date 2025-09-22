@@ -12,9 +12,14 @@ from agents.specialized_agents import (
 )
 from wallet import Wallet
 
+from state_manager import StateManager
+
 class TradingSystem:
-    def __init__(self, initial_balance_usd=100.0, auto_buy_btc=True):
+    def __init__(self, initial_balance_usd=100.0, auto_buy_btc=True, load_saved_state=True):
         load_dotenv()
+        
+        # Initialize state manager
+        self.state_manager = StateManager()
         
         # Initialize Binance client for real market data
         self.client = Client(
@@ -31,8 +36,9 @@ class TradingSystem:
             print(f"Warning: Could not connect to Binance: {e}")
             return
         
-        # Initialize wallet
-        self.wallet = Wallet(initial_balance_usd)
+        # Initialize wallet with saved state if available
+        saved_state = self.state_manager.load_state() if load_saved_state else None
+        self.wallet = Wallet(initial_balance_usd, state=saved_state)
         
         # Initialize agents
         together_key = os.getenv('TOGETHER_API_KEY')
@@ -40,6 +46,16 @@ class TradingSystem:
         self.risk_advisor = RiskAdvisorAgent(together_key)
         self.graph_analyst = GraphAnalystAgent(together_key)
         self.financial_advisor = FinancialAdvisorAgent(together_key)
+        
+    def reset_system(self, initial_balance_usd=100.0):
+        """Reset the trading system to initial state"""
+        self.state_manager.delete_state()
+        self.wallet = Wallet(initial_balance_usd)
+        return True
+        
+    def save_system_state(self):
+        """Save the current system state"""
+        return self.state_manager.save_state(self.wallet)
         
         # Automatic initial BTC purchase
         if auto_buy_btc:
@@ -283,6 +299,10 @@ class TradingSystem:
             )
             
             print(f"Virtual {side.upper()} order executed: {quantity} {symbol} @ ${current_price}")
+            
+            # Save system state after successful trade
+            self.save_system_state()
+            
             return order
             
         except Exception as e:
