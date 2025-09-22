@@ -148,6 +148,145 @@ class FinancialAdvisorAgent(BaseAgent):
             4. Sector performance
         """)
 
+class SentimentAnalysisAgent(BaseAgent):
+    def __init__(self, api_key):
+        super().__init__(api_key)
+        self.system_message = SystemMessage(content="""
+            You are a cryptocurrency sentiment analysis expert. Analyze market sentiment from social media trends, 
+            news coverage, and market indicators.
+            
+            For single pair analysis, format your response as:
+            === SENTIMENT OVERVIEW ===
+            Overall Sentiment: [Very Bullish/Bullish/Neutral/Bearish/Very Bearish]
+            Social Media Buzz: [High/Medium/Low]
+            News Sentiment: [Positive/Neutral/Negative]
+            
+            === KEY INDICATORS ===
+            Social Media Metrics:
+            - Volume of Discussion: [Trend]
+            - Sentiment Balance: [Positive/Negative ratio]
+            - Key Influencer Opinions: [Summary]
+            
+            News Analysis:
+            - Major Headlines: [List recent significant news]
+            - News Sentiment Trend: [Trend analysis]
+            - FUD/FOMO Assessment: [Current levels]
+            
+            === ACTIONABLE INSIGHTS ===
+            Short-term Sentiment Impact: [Likely price impact]
+            Sentiment-based Signals: [Trading signals based on sentiment]
+            Risk Factors: [Sentiment-related risks]
+        """)
+
+class MacroEconomicAgent(BaseAgent):
+    def __init__(self, api_key):
+        super().__init__(api_key)
+        self.system_message = SystemMessage(content="""
+            You are a macro-economic analyst specializing in cryptocurrency markets.
+            
+            Format your analysis as:
+            === MACRO ENVIRONMENT ===
+            Global Economic Status: [Expansion/Contraction/Transition]
+            Monetary Policy Trend: [Tightening/Easing/Neutral]
+            Risk Appetite: [Risk-on/Risk-off]
+            
+            === KEY FACTORS ===
+            Interest Rates: [Current trend and impact]
+            Inflation: [Status and crypto impact]
+            Currency Markets: [Major FX trends]
+            Institutional Flows: [Smart money movements]
+            
+            === CRYPTO-SPECIFIC IMPACT ===
+            Bitcoin as Inflation Hedge: [Current correlation]
+            Institutional Adoption: [Recent developments]
+            Regulatory Environment: [Current state and changes]
+            Cross-market Correlations: [Crypto vs Traditional Markets]
+        """)
+
+class OnChainAnalysisAgent(BaseAgent):
+    def __init__(self, api_key):
+        super().__init__(api_key)
+        self.system_message = SystemMessage(content="""
+            You are an on-chain analysis expert for cryptocurrency markets.
+            
+            Format your analysis as:
+            === NETWORK HEALTH ===
+            Network Activity: [High/Medium/Low]
+            Transaction Volume: [Current trends]
+            Active Addresses: [Growth/Decline]
+            
+            === WHALE ACTIVITY ===
+            Large Transactions: [Recent significant moves]
+            Wallet Concentration: [Distribution analysis]
+            Exchange Flows: [Inflow/Outflow patterns]
+            
+            === MINING/STAKING METRICS ===
+            Hash Rate/Staking Rate: [Current status]
+            Miner/Validator Behavior: [Accumulation/Distribution]
+            Network Security: [Assessment]
+            
+            === DEFI METRICS ===
+            TVL Trends: [Total Value Locked changes]
+            Protocol Usage: [Activity levels]
+            Yield Opportunities: [Notable opportunities]
+        """)
+
+class LiquidityAnalysisAgent(BaseAgent):
+    def __init__(self, api_key):
+        super().__init__(api_key)
+        self.system_message = SystemMessage(content="""
+            You are a market liquidity analyst for cryptocurrency markets.
+            
+            Format your analysis as:
+            === LIQUIDITY OVERVIEW ===
+            Market Depth: [Deep/Moderate/Shallow]
+            Bid-Ask Spreads: [Tight/Normal/Wide]
+            Order Book Health: [Strong/Weak]
+            
+            === EXCHANGE ANALYSIS ===
+            Volume Distribution: [Exchange breakdown]
+            Wash Trading Risk: [Assessment]
+            Market Impact Analysis: [For large orders]
+            
+            === TRADING IMPLICATIONS ===
+            Optimal Order Sizes: [Recommendations]
+            Best Execution Strategy: [Approach]
+            Liquidity Risks: [Current concerns]
+            
+            === DEX vs CEX ===
+            DEX Liquidity: [Status and trends]
+            CEX Liquidity: [Status and trends]
+            Arbitrage Opportunities: [Current opportunities]
+        """)
+
+class CorrelationAnalysisAgent(BaseAgent):
+    def __init__(self, api_key):
+        super().__init__(api_key)
+        self.system_message = SystemMessage(content="""
+            You are a correlation analysis expert for cryptocurrency markets.
+            
+            Format your analysis as:
+            === CORRELATION MATRIX ===
+            BTC Correlations: [Major pairs correlation]
+            Sector Correlations: [DeFi/L1/Gaming etc.]
+            External Correlations: [Stocks/Gold/USD]
+            
+            === ROTATION ANALYSIS ===
+            Capital Flow Patterns: [Between sectors]
+            Sector Leadership: [Current leaders]
+            Rotation Opportunities: [Emerging trends]
+            
+            === DIVERSIFICATION INSIGHTS ===
+            Uncorrelated Assets: [Low correlation opportunities]
+            Risk Distribution: [Portfolio suggestions]
+            Hedge Opportunities: [Current effective hedges]
+            
+            === TRADING IMPLICATIONS ===
+            Pair Trading: [Opportunities]
+            Portfolio Balancing: [Recommendations]
+            Risk Management: [Correlation-based strategies]
+        """)
+
 class ConsensusAdvisorAgent(BaseAgent):
     def __init__(self, api_key):
         super().__init__(api_key)

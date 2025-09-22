@@ -9,7 +9,12 @@ from agents.specialized_agents import (
     RiskAdvisorAgent,
     GraphAnalystAgent,
     FinancialAdvisorAgent,
-    ConsensusAdvisorAgent
+    ConsensusAdvisorAgent,
+    SentimentAnalysisAgent,
+    MacroEconomicAgent,
+    OnChainAnalysisAgent,
+    LiquidityAnalysisAgent,
+    CorrelationAnalysisAgent
 )
 from wallet import Wallet
 
@@ -37,20 +42,36 @@ class TradingSystem:
             print(f"Warning: Could not connect to Binance: {e}")
             return
         
-        # Initialize wallet with saved state if available
+        # Load saved state if available
         saved_state = self.state_manager.load_state() if load_saved_state else None
         self.wallet = Wallet(initial_balance_usd, state=saved_state)
         
         # Initialize agents
         together_key = os.getenv('TOGETHER_API_KEY')
+        # Core trading agents
         self.trader = TraderAgent(together_key)
         self.risk_advisor = RiskAdvisorAgent(together_key)
         self.graph_analyst = GraphAnalystAgent(together_key)
         self.financial_advisor = FinancialAdvisorAgent(together_key)
+        
+        # Specialized analysis agents
+        self.sentiment_analyst = SentimentAnalysisAgent(together_key)
+        self.macro_analyst = MacroEconomicAgent(together_key)
+        self.onchain_analyst = OnChainAnalysisAgent(together_key)
+        self.liquidity_analyst = LiquidityAnalysisAgent(together_key)
+        self.correlation_analyst = CorrelationAnalysisAgent(together_key)
+        
+        # Consensus advisor (synthesizes all analyses)
         self.consensus_advisor = ConsensusAdvisorAgent(together_key)
         
-        # Automatic initial BTC purchase if no saved state and auto_buy_btc is enabled
-        if auto_buy_btc and saved_state is None:
+        # Automatic initial BTC purchase only if:
+        # 1. auto_buy_btc is enabled
+        # 2. No saved state was loaded
+        # 3. No positions exist in the wallet
+        if (auto_buy_btc and 
+            saved_state is None and 
+            not self.wallet.positions and 
+            self.wallet.current_balance_usd >= 20.0):
             print("Making initial BTC purchase...")
             self.execute_trade('BTCUSDT', 'BUY', 20.0)
         
@@ -225,12 +246,20 @@ class TradingSystem:
             
             # Get analysis from each agent
             analyses = {
+                # Core analyses
                 "Trader's Analysis": None,
                 "Risk Assessment": None,
                 "Technical Analysis": None,
-                "Financial Analysis": None
+                "Financial Analysis": None,
+                # Specialized analyses
+                "Market Sentiment": None,
+                "Macro Environment": None,
+                "On-Chain Metrics": None,
+                "Liquidity Analysis": None,
+                "Correlation Analysis": None
             }
             
+            # Core analyses
             try:
                 analyses["Trader's Analysis"] = self.trader.get_response(market_data, multi_pair)
             except Exception as e:
@@ -250,6 +279,32 @@ class TradingSystem:
                 analyses["Financial Analysis"] = self.financial_advisor.get_response(market_data, multi_pair)
             except Exception as e:
                 analyses["Financial Analysis"] = f"Error: {str(e)}"
+                
+            # Specialized analyses
+            try:
+                analyses["Market Sentiment"] = self.sentiment_analyst.get_response(market_data, multi_pair)
+            except Exception as e:
+                analyses["Market Sentiment"] = f"Error: {str(e)}"
+                
+            try:
+                analyses["Macro Environment"] = self.macro_analyst.get_response(market_data, multi_pair)
+            except Exception as e:
+                analyses["Macro Environment"] = f"Error: {str(e)}"
+                
+            try:
+                analyses["On-Chain Metrics"] = self.onchain_analyst.get_response(market_data, multi_pair)
+            except Exception as e:
+                analyses["On-Chain Metrics"] = f"Error: {str(e)}"
+                
+            try:
+                analyses["Liquidity Analysis"] = self.liquidity_analyst.get_response(market_data, multi_pair)
+            except Exception as e:
+                analyses["Liquidity Analysis"] = f"Error: {str(e)}"
+                
+            try:
+                analyses["Correlation Analysis"] = self.correlation_analyst.get_response(market_data, multi_pair)
+            except Exception as e:
+                analyses["Correlation Analysis"] = f"Error: {str(e)}"
                 
             # Get consensus view after collecting all analyses
             try:
