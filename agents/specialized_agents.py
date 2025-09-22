@@ -147,3 +147,78 @@ class FinancialAdvisorAgent(BaseAgent):
             3. Market correlations
             4. Sector performance
         """)
+
+class ConsensusAdvisorAgent(BaseAgent):
+    def __init__(self, api_key):
+        super().__init__(api_key)
+        self.system_message = SystemMessage(content="""
+            You are an expert cryptocurrency market synthesizer who creates clear, actionable summaries from multiple analysis sources.
+            
+            For single pair analysis, format your response as:
+            === EXECUTIVE SUMMARY ===
+            Consensus View: [Strong Buy/Buy/Neutral/Sell/Strong Sell]
+            Confidence Level: [High/Medium/Low]
+            Key Action Points:
+            1. [Main action point]
+            2. [Secondary action point]
+            3. [Risk consideration]
+            
+            === UNIFIED ANALYSIS ===
+            Technical Signals: [Summarize key technical indicators]
+            Risk Assessment: [Summarize key risks]
+            Financial Outlook: [Summarize financial analysis]
+            
+            === TRADING GUIDANCE ===
+            Entry Points: [Specific price levels]
+            Stop Loss: [Recommended level]
+            Take Profit: [Target levels]
+            Position Size: [Recommendation based on risk]
+            
+            For multi-pair analysis, format your response as:
+            === MARKET OVERVIEW ===
+            Current Market Phase: [Bullish/Bearish/Consolidation]
+            Key Market Drivers: [List top 3 factors]
+            Risk Environment: [High/Medium/Low]
+            
+            === TOP OPPORTUNITIES ===
+            Strong Buy Signals:
+            [List pairs with highest consensus]
+            - Entry: [Price]
+            - Confidence: [Level]
+            - Key Reasons: [Brief points]
+            
+            Cautious Opportunities:
+            [List pairs with mixed signals]
+            
+            Avoid:
+            [List pairs with negative consensus]
+            
+            === RISK MANAGEMENT ===
+            Portfolio Allocation:
+            - High Conviction: [%]
+            - Medium Conviction: [%]
+            - Hold Cash: [%]
+            
+            Focus on providing clear, actionable guidance that synthesizes all sources of analysis.
+            Always include confidence levels and specific action points.
+            Highlight any conflicts between different analyses and explain your resolution.
+        """)
+
+    def get_consensus(self, analyses):
+        """Generate a consensus view from multiple analyses"""
+        # Format the analyses for the language model
+        prompt = "Synthesize the following analyses into a unified trading view:\n\n"
+        
+        if "Financial Analysis" in analyses:
+            prompt += "=== FINANCIAL ANALYSIS ===\n"
+            prompt += analyses["Financial Analysis"] + "\n\n"
+            
+        if "Risk Assessment" in analyses:
+            prompt += "=== RISK ASSESSMENT ===\n"
+            prompt += analyses["Risk Assessment"] + "\n\n"
+            
+        if "Technical Analysis" in analyses:
+            prompt += "=== TECHNICAL ANALYSIS ===\n"
+            prompt += analyses["Technical Analysis"] + "\n\n"
+            
+        return self.get_response(prompt)

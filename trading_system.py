@@ -8,7 +8,8 @@ from agents.specialized_agents import (
     TraderAgent,
     RiskAdvisorAgent,
     GraphAnalystAgent,
-    FinancialAdvisorAgent
+    FinancialAdvisorAgent,
+    ConsensusAdvisorAgent
 )
 from wallet import Wallet
 
@@ -46,6 +47,12 @@ class TradingSystem:
         self.risk_advisor = RiskAdvisorAgent(together_key)
         self.graph_analyst = GraphAnalystAgent(together_key)
         self.financial_advisor = FinancialAdvisorAgent(together_key)
+        self.consensus_advisor = ConsensusAdvisorAgent(together_key)
+        
+        # Automatic initial BTC purchase if no saved state and auto_buy_btc is enabled
+        if auto_buy_btc and saved_state is None:
+            print("Making initial BTC purchase...")
+            self.execute_trade('BTCUSDT', 'BUY', 20.0)
         
     def reset_system(self, initial_balance_usd=100.0):
         """Reset the trading system to initial state"""
@@ -243,6 +250,12 @@ class TradingSystem:
                 analyses["Financial Analysis"] = self.financial_advisor.get_response(market_data, multi_pair)
             except Exception as e:
                 analyses["Financial Analysis"] = f"Error: {str(e)}"
+                
+            # Get consensus view after collecting all analyses
+            try:
+                analyses["Consensus Summary"] = self.consensus_advisor.get_consensus(analyses)
+            except Exception as e:
+                analyses["Consensus Summary"] = f"Error generating consensus: {str(e)}"
             
             # Extract and execute trades automatically if analyzing all pairs
             if multi_pair:

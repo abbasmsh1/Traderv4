@@ -1,0 +1,23 @@
+{
+    "initial_balance_usd": 100.0,
+    "current_balance_usd": 79.7642506,
+    "positions": {
+        "BTCUSDT": {
+            "amount": 0.00018,
+            "avg_price": 112420.83
+        }
+    },
+    "trade_history": [
+        {
+            "timestamp": 1758535348889,
+            "symbol": "BTCUSDT",
+            "side": "BUY",
+            "amount": 0.00018,
+            "price": 112420.83,
+            "value_usd": 20.235749400000003,
+            "balance_after": 79.7642506
+        }
+    ],
+    "start_time": 1758535348187,
+    "last_saved": "2025-09-22T12:02:28.889570"
+}
