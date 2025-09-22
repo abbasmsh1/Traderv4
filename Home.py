@@ -31,24 +31,97 @@ with st.sidebar.expander("System Controls", expanded=False):
             st.rerun()
 
 # Trading Pair Selection
-symbol = st.sidebar.selectbox(
-    "Select Trading Pair",
-    [
+coin_category = st.sidebar.radio(
+    "Coin Category",
+    ["Major Coins", "Meme Coins", "All"],
+    help="Filter coins by category"
+)
+
+# Filter symbols based on category
+if coin_category == "Major Coins":
+    available_symbols = [
         "BTCUSDT",  # Bitcoin
         "ETHUSDT",  # Ethereum
         "BNBUSDT",  # Binance Coin
+        "SOLUSDT",  # Solana
         "ADAUSDT",  # Cardano
         "DOTUSDT",  # Polkadot
-        "SOLUSDT",  # Solana
-        "AVAXUSDT", # Avalanche
         "MATICUSDT", # Polygon
-        "LINKUSDT", # Chainlink
-        "ATOMUSDT", # Cosmos
-        "ALGOUSDT", # Algorand
-        "NEARUSDT", # NEAR Protocol
-        "FTMUSDT",  # Fantom
-        "SANDUSDT", # The Sandbox
-        "MANAUSDT"  # Decentraland
+        "AVAXUSDT",  # Avalanche
+        "LINKUSDT",  # Chainlink
+        "ATOMUSDT"   # Cosmos
+    ]
+elif coin_category == "Meme Coins":
+    available_symbols = [
+        "DOGEUSDT",  # Dogecoin
+        "SHIBUSDT",  # Shiba Inu
+        "PEPEUSDT",  # Pepe
+        "FLOKIUSDT", # Floki
+        "INJUSDT",   # Injective
+        "GMTUSDT",   # STEPN
+        "GALAUSDT",  # Gala Games
+        "APTUSDT",   # Aptos
+        "IMXUSDT",   # Immutable X
+        "MASKUSDT",  # Mask Network
+        "FETUSDT",   # Fetch.ai
+        "AGIXUSDT",  # SingularityNET
+        "ICPUSDT",   # Internet Computer
+        "JASMYUSDT", # JasmyCoin
+        "GMXUSDT",   # GMX
+        "CHZUSDT",   # Chiliz
+        "PERPUSDT",  # Perpetual Protocol
+        "STXUSDT",   # Stacks
+        "REEFUSDT",  # Reef
+        "TRUUSDT"    # TrueFi
+    ]
+else:
+    available_symbols = [
+        # Major Coins
+        "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "ADAUSDT",
+        "DOTUSDT", "MATICUSDT", "AVAXUSDT", "LINKUSDT", "ATOMUSDT",
+        # Meme/Alt Coins
+        "DOGEUSDT", "SHIBUSDT", "PEPEUSDT", "FLOKIUSDT", "INJUSDT",
+        "GMTUSDT", "GALAUSDT", "APTUSDT", "IMXUSDT", "MASKUSDT",
+        "FETUSDT", "AGIXUSDT", "ICPUSDT", "JASMYUSDT", "GMXUSDT",
+        "CHZUSDT", "PERPUSDT", "STXUSDT", "REEFUSDT", "TRUUSDT"
+    ]
+
+symbol = st.sidebar.selectbox(
+    "Select Trading Pair",
+    [
+        # Major Cryptocurrencies
+        "BTCUSDT",   # Bitcoin
+        "ETHUSDT",   # Ethereum
+        "BNBUSDT",   # Binance Coin
+        "SOLUSDT",   # Solana
+        "ADAUSDT",   # Cardano
+        "DOTUSDT",   # Polkadot
+        "MATICUSDT", # Polygon
+        "AVAXUSDT",  # Avalanche
+        "LINKUSDT",  # Chainlink
+        "ATOMUSDT",  # Cosmos
+        
+        # Meme Coins and Community Tokens
+        "DOGEUSDT",  # Dogecoin
+        "SHIBUSDT",  # Shiba Inu
+        "PEPEUSDT",  # Pepe
+        "FLOKIUSDT", # Floki
+        "BONKUSDT",  # Bonk
+        "WOJAKUSDT", # Wojak
+        "CATUSDT",   # CatCoin
+        "BABYDOGEUSDT", # Baby Doge
+        "SAFEMOONUSDT", # SafeMoon
+        "KISHUUSDT", # Kishu Inu
+        "SAMOUSDT",  # Samoyedcoin
+        "ELONUS",    # Dogelon Mars
+        "MOONUSDT",  # MoonCoin
+        "HAMSTERUSDT", # HamsterCoin
+        "CORGIUS",   # CorgiCoin
+        "PAWUSDT",   # PawSwap
+        "CATGIRLUS", # CatGirl
+        "MEMEUSDT",  # Memecoin
+        "WSHIBUSDT", # Wrapped SHIB
+        "AKITAUSDT"  # Akita Inu
     ]
 )
 
@@ -73,23 +146,103 @@ st.title("Trading Dashboard 📈")
 
 # Market Overview
 st.header("Market Overview")
+
+# Define color function for price changes
+def color_price_change(val):
+    try:
+        val = float(val.strip('%').strip('+'))
+        color = 'green' if val > 0 else 'red'
+        return f'color: {color}'
+    except:
+        return 'color: black'
+
 market_overview = pd.DataFrame(st.session_state.trading_system.get_market_overview())
+
+# Define major coins list
+major_coins = [
+    "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "ADAUSDT",
+    "DOTUSDT", "MATICUSDT", "AVAXUSDT", "LINKUSDT", "ATOMUSDT"
+]
+
+# Add category column
+market_overview['category'] = market_overview['symbol'].apply(
+    lambda x: 'Major Coin' if x in major_coins else 'Meme Coin'
+)
+
+# Format columns
 market_overview['price'] = market_overview['price'].map('${:,.2f}'.format)
 market_overview['volume_24h'] = market_overview['volume_24h'].map('${:,.0f}'.format)
 market_overview['price_change_24h'] = market_overview['price_change_24h'].map('{:+.2f}%'.format)
 market_overview['rsi'] = market_overview['rsi'].map('{:.1f}'.format)
 
-# Color-code the price change column
-def color_price_change(val):
-    val = float(val.strip('%').strip('+'))
-    color = 'green' if val > 0 else 'red'
-    return f'color: {color}'
+# Split into major and meme coins
+major_df = market_overview[market_overview['category'] == 'Major Coin'].copy()
+meme_df = market_overview[market_overview['category'] == 'Meme Coin'].copy()
 
-styled_overview = market_overview.style.map(
-    color_price_change,
-    subset=['price_change_24h']
-)
-st.dataframe(styled_overview, height=400)
+# Create two columns for the market overview
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("🔷 Major Cryptocurrencies")
+    # Drop category column and style the dataframe
+    display_major_df = major_df.drop(columns=['category'])
+    major_styled = display_major_df.style.map(
+        color_price_change,
+        subset=['price_change_24h']
+    )
+    st.dataframe(major_styled, height=400)
+    
+    # Add summary metrics for major coins
+    avg_major_change = pd.to_numeric(major_df['price_change_24h'].str.rstrip('%').str.replace('+', '')).mean()
+    total_major_volume = pd.to_numeric(major_df['volume_24h'].str.replace('$', '').str.replace(',', '')).sum()
+    st.metric("Average 24h Change", f"{avg_major_change:+.2f}%")
+    st.metric("Total Volume", f"${total_major_volume:,.0f}")
+
+with col2:
+    st.subheader("🎮 Meme Coins")
+    # Drop category column and style the dataframe
+    display_meme_df = meme_df.drop(columns=['category'])
+    meme_styled = display_meme_df.style.map(
+        color_price_change,
+        subset=['price_change_24h']
+    )
+    st.dataframe(meme_styled, height=400)
+    
+    # Add summary metrics for meme coins
+    avg_meme_change = pd.to_numeric(meme_df['price_change_24h'].str.rstrip('%').str.replace('+', '')).mean()
+    total_meme_volume = pd.to_numeric(meme_df['volume_24h'].str.replace('$', '').str.replace(',', '')).sum()
+    st.metric("Average 24h Change", f"{avg_meme_change:+.2f}%")
+    st.metric("Total Volume", f"${total_meme_volume:,.0f}")
+
+# Add market movement summary
+st.subheader("Market Movement Summary")
+movement_cols = st.columns(4)
+
+with movement_cols[0]:
+    major_up = len(major_df[pd.to_numeric(major_df['price_change_24h'].str.rstrip('%')) > 0])
+    st.metric("Major Coins Up", f"{major_up}/{len(major_df)}")
+
+with movement_cols[1]:
+    major_down = len(major_df) - major_up
+    st.metric("Major Coins Down", f"{major_down}/{len(major_df)}")
+
+with movement_cols[2]:
+    meme_up = len(meme_df[pd.to_numeric(meme_df['price_change_24h'].str.rstrip('%')) > 0])
+    st.metric("Meme Coins Up", f"{meme_up}/{len(meme_df)}")
+
+with movement_cols[3]:
+    meme_down = len(meme_df) - meme_up
+    st.metric("Meme Coins Down", f"{meme_down}/{len(meme_df)}")
+
+# Display combined overview in expandable section
+with st.expander("View All Coins", expanded=False):
+    # Drop category column for display
+    display_overview = market_overview.drop(columns=['category'])
+    styled_overview = display_overview.style.map(
+        color_price_change,
+        subset=['price_change_24h']
+    )
+    st.dataframe(styled_overview, height=400)
 
 # Portfolio Overview
 st.header("Portfolio Overview")

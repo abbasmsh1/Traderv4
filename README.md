@@ -40,7 +40,7 @@ A sophisticated cryptocurrency trading system that combines multiple AI agents f
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/Traderv4.git
+git clone https://github.com/abbasmsh1/Traderv4.git
 cd Traderv4
 ```
 

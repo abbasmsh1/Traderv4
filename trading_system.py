@@ -131,14 +131,61 @@ class TradingSystem:
             
     def get_all_market_data(self, symbols=None, interval='1h', limit=100):
         """
-        Fetch market data for multiple symbols
+        Fetch market data for multiple symbols including major coins and meme tokens
         """
         if symbols is None:
-            symbols = [
-                "BTCUSDT", "ETHUSDT", "BNBUSDT", "ADAUSDT", "DOTUSDT",
-                "SOLUSDT", "AVAXUSDT", "MATICUSDT", "LINKUSDT", "ATOMUSDT",
-                "ALGOUSDT", "NEARUSDT", "FTMUSDT", "SANDUSDT", "MANAUSDT"
+            # Major cryptocurrencies (verified on Binance)
+            major_coins = [
+                "BTCUSDT",  # Bitcoin
+                "ETHUSDT",  # Ethereum
+                "BNBUSDT",  # Binance Coin
+                "SOLUSDT",  # Solana
+                "ADAUSDT",  # Cardano
+                "DOTUSDT",  # Polkadot
+                "MATICUSDT", # Polygon
+                "AVAXUSDT", # Avalanche
+                "LINKUSDT", # Chainlink
+                "ATOMUSDT"  # Cosmos
             ]
+            
+            # Meme coins and community tokens (verified on Binance)
+            meme_coins = [
+                "DOGEUSDT",  # Dogecoin
+                "SHIBUSDT",  # Shiba Inu
+                "PEPEUSDT",  # Pepe
+                "FLOKIUSDT", # Floki
+                "INJUSDT",   # Injective (New DeFi meme)
+                "GMTUSDT",   # STEPN
+                "GALAUSDT",  # Gala Games
+                "APTUSDT",   # Aptos
+                "IMXUSDT",   # Immutable X
+                "MASKUSDT",  # Mask Network
+                "FETUSDT",   # Fetch.ai
+                "AGIXUSDT",  # SingularityNET
+                "ICPUSDT",   # Internet Computer
+                "JASMYUSDT", # JasmyCoin
+                "GMXUSDT",   # GMX
+                "CHZUSDT",   # Chiliz
+                "PERPUSDT",  # Perpetual Protocol
+                "STXUSDT",   # Stacks
+                "REEFUSDT",  # Reef
+                "TRUUSDT"    # TrueFi
+            ]
+            
+            symbols = major_coins + meme_coins
+            
+            # Verify symbols are valid on Binance
+            valid_symbols = []
+            for symbol in symbols:
+                try:
+                    # Test if symbol exists by getting ticker
+                    self.client.get_symbol_ticker(symbol=symbol)
+                    valid_symbols.append(symbol)
+                except Exception as e:
+                    print(f"Skipping invalid symbol {symbol}: {str(e)}")
+                    continue
+            
+            symbols = valid_symbols
         
         market_data = {}
         for symbol in symbols:
