@@ -1,0 +1,13 @@
+python-binance==1.0.19
+langchain==0.0.350
+together==0.2.8
+python-dotenv==1.0.0
+pandas==2.1.1
+numpy==1.26.0
+matplotlib==3.8.0
+TA-Lib @ https://download.lfd.uci.edu/pythonlibs/archived/TA_Lib-0.4.24-cp39-cp39-win_amd64.whl
+streamlit==1.28.0
+plotly==5.18.0
+fastapi==0.104.1
+uvicorn==0.24.0
+python-multipart==0.0.6
