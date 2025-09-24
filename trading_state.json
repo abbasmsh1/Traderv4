@@ -1,54 +1,49 @@
 {
     "initial_balance_usd": 100.0,
-    "current_balance_usd": 19.70527059999999,
+    "current_balance_usd": 39.516196199999996,
     "positions": {
         "BTCUSDT": {
             "amount": 0.00018,
-            "avg_price": 112420.83
+            "avg_price": 113640.91
         },
         "AGIXUSDT": {
-            "amount": 97.80000000000001,
+            "amount": 32.6,
             "avg_price": 0.6141
+        },
+        "GMXUSDT": {
+            "amount": 1.133,
+            "avg_price": 17.66
         }
     },
     "trade_history": [
         {
-            "timestamp": 1758535348889,
+            "timestamp": 1758727393717,
             "symbol": "BTCUSDT",
             "side": "BUY",
             "amount": 0.00018,
-            "price": 112420.83,
-            "value_usd": 20.235749400000003,
-            "balance_after": 79.7642506
+            "price": 113640.91,
+            "value_usd": 20.4553638,
+            "balance_after": 79.5446362
         },
         {
-            "timestamp": 1758540294833,
+            "timestamp": 1758749072201,
             "symbol": "AGIXUSDT",
             "side": "buy",
             "amount": 32.6,
             "price": 0.6141,
             "value_usd": 20.019660000000002,
-            "balance_after": 59.744590599999995
+            "balance_after": 59.5249762
         },
         {
-            "timestamp": 1758540721857,
-            "symbol": "AGIXUSDT",
+            "timestamp": 1758749074408,
+            "symbol": "GMXUSDT",
             "side": "buy",
-            "amount": 32.6,
-            "price": 0.6141,
-            "value_usd": 20.019660000000002,
-            "balance_after": 39.72493059999999
-        },
-        {
-            "timestamp": 1758541142079,
-            "symbol": "AGIXUSDT",
-            "side": "buy",
-            "amount": 32.6,
-            "price": 0.6141,
-            "value_usd": 20.019660000000002,
-            "balance_after": 19.70527059999999
+            "amount": 1.133,
+            "price": 17.66,
+            "value_usd": 20.00878,
+            "balance_after": 39.516196199999996
         }
     ],
-    "start_time": 1758535348187,
-    "last_saved": "2025-09-22T13:39:02.079170"
+    "start_time": 1758727392734,
+    "last_saved": "2025-09-24T23:24:34.408348"
 }

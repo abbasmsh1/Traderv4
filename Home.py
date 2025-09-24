@@ -29,6 +29,12 @@ with st.sidebar.expander("System Controls", expanded=False):
         if st.session_state.trading_system.reset_system():
             st.session_state.trading_system = TradingSystem(initial_balance_usd=100.0, auto_buy_btc=True)
             st.rerun()
+    if st.button("Export Market CSV"):
+        ok = st.session_state.trading_system.save_all_market_data_csv()
+        if ok:
+            st.sidebar.success("Market data appended to CSV")
+        else:
+            st.sidebar.error("Failed to write CSV")
 
 # Trading Pair Selection
 coin_category = st.sidebar.radio(
@@ -359,9 +365,12 @@ if st.button("Analyze Market") or (auto_trade and (st.session_state.last_update 
         st.session_state.last_update = time.time()
         
         # Display analysis from each agent in expandable sections
-        for agent, agent_analysis in analysis.items():
-            with st.expander(agent, expanded=True):
-                st.write(agent_analysis)
+        if isinstance(analysis, dict):
+            for agent, agent_analysis in analysis.items():
+                with st.expander(agent, expanded=True):
+                    st.write(agent_analysis)
+        else:
+            st.error(str(analysis))
 
 # Market Data Visualization
 st.header("Market Data Visualization")
@@ -433,9 +442,12 @@ if auto_trade:
             st.session_state.last_update = current_time
             
             # Display analysis from each agent in expandable sections
-            for agent, agent_analysis in analysis.items():
-                with st.expander(agent, expanded=True):
-                    st.write(agent_analysis)
+            if isinstance(analysis, dict):
+                for agent, agent_analysis in analysis.items():
+                    with st.expander(agent, expanded=True):
+                        st.write(agent_analysis)
+            else:
+                st.error(str(analysis))
     
     # Schedule next update
     time.sleep(1)

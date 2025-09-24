@@ -8,12 +8,16 @@ set_verbose(False)
 
 class BaseAgent:
     def __init__(self, api_key):
-        self.llm = Together(
-            model="mistralai/Mixtral-8x7B-Instruct-v0.1",
-            temperature=0.7,
-            together_api_key=api_key,
-            max_tokens=2048
-        )
+        # LLM is optional to support non-LLM agents
+        if api_key:
+            self.llm = Together(
+                model="mistralai/Mixtral-8x7B-Instruct-v0.1",
+                temperature=0.7,
+                together_api_key=api_key,
+                max_tokens=2048
+            )
+        else:
+            self.llm = None
         self.system_message = None
         
     def get_response(self, market_data, multi_pair=False):
@@ -78,6 +82,8 @@ Current Market Data:
 
 Please provide your analysis based on this market data. [/INST]</s>"""
         
+        if self.llm is None:
+            return "LLM disabled: missing Together API key. Set TOGETHER_API_KEY to enable this agent."
         try:
             response = self.llm.invoke(prompt)
             return response

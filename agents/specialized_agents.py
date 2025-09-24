@@ -8,7 +8,16 @@ class TraderAgent(BaseAgent):
             You are an expert cryptocurrency trader. Your role is to analyze market data and make trading decisions.
             For multiple pairs, rank them by opportunity and provide specific recommendations.
             Consider trends, support/resistance levels, and volume patterns.
-            
+            Your goal is to make money as fast as possible.
+            You should be very aggressive in your trading.
+            Be a risk taker.
+            Evaluate the market and make a decision.
+            If the market is bullish, you should buy.
+            If the market is bearish, you should sell.
+            If the market is neutral, you should hold.
+            If the market is volatile, you should be very cautious.
+            If the market is stable, you should be aggressive.
+            If the market is trending, you should be aggressive.
             For single pair analysis, format your response as:
             Analysis: [Your market analysis]
             Recommendation: [Buy/Sell/Hold]
@@ -28,17 +37,84 @@ class TraderAgent(BaseAgent):
                Take Profit: [Price]
                Confidence: [High/Medium/Low]
             
-            [Repeat for top 3 opportunities]
+            [Repeat for top all opportunities]
             
             High-Risk Pairs to Avoid:
             [List any pairs showing dangerous patterns]
         """)
+
+    def get_trade_from_consensus(self, consensus_summary, market_data, multi_pair=False):
+        """Generate a final trading plan informed by the consensus summary and market data."""
+        import json
+        consensus_section = f"""
+<CONSENSUS_SUMMARY>
+{consensus_summary}
+</CONSENSUS_SUMMARY>
+"""
+        if not multi_pair:
+            formatted_data = {
+                "price_data": {
+                    "close": float(market_data.get("close", 0)),
+                    "open": float(market_data.get("open", 0)),
+                    "high": float(market_data.get("high", 0)),
+                    "low": float(market_data.get("low", 0)),
+                    "volume": float(market_data.get("volume", 0))
+                },
+                "indicators": {
+                    "RSI": float(market_data.get("RSI", 0)),
+                    "SMA_20": float(market_data.get("SMA_20", 0)),
+                    "SMA_50": float(market_data.get("SMA_50", 0)),
+                    "MACD": float(market_data.get("MACD", 0)),
+                    "MACD_SIGNAL": float(market_data.get("MACD_SIGNAL", 0)),
+                    "MACD_HIST": float(market_data.get("MACD_HIST", 0)),
+                    "price_change_24h": float(market_data.get("price_change_24h", 0))
+                }
+            }
+        else:
+            formatted_data = {}
+            for symbol, data in market_data.items():
+                formatted_data[symbol] = {
+                    "price_data": {
+                        "close": float(data.get("close", 0)),
+                        "open": float(data.get("open", 0)),
+                        "high": float(data.get("high", 0)),
+                        "low": float(data.get("low", 0)),
+                        "volume": float(data.get("volume", 0))
+                    },
+                    "indicators": {
+                        "RSI": float(data.get("RSI", 0)),
+                        "SMA_20": float(data.get("SMA_20", 0)),
+                        "SMA_50": float(data.get("SMA_50", 0)),
+                        "MACD": float(data.get("MACD", 0)),
+                        "MACD_SIGNAL": float(data.get("MACD_SIGNAL", 0)),
+                        "MACD_HIST": float(data.get("MACD_HIST", 0)),
+                        "price_change_24h": float(data.get("price_change_24h", 0))
+                    }
+                }
+
+        prompt = f"""<s>[INST] {self.system_message.content}
+
+Use the following consensus summary to refine your final, actionable trading plan. Your output should strictly follow the formats already specified (single-pair or multi-pair), and must be concrete and executable.
+
+{consensus_section}
+
+Current Market Data:
+{json.dumps(formatted_data, indent=2)}
+
+Provide the final consensus-driven trading plan now. [/INST]</s>"""
+
+        try:
+            return self.llm.invoke(prompt)
+        except Exception as e:
+            return f"Error generating consensus-driven plan: {str(e)}"
 
 class RiskAdvisorAgent(BaseAgent):
     def __init__(self, api_key):
         super().__init__(api_key)
         self.system_message = SystemMessage(content="""
             You are a risk management expert. Your role is to assess the risk level of potential trades.
+            Do your best to assess the risk level of potential trades and perform proper due diligence.
+            Your goal is to give advise that helps make money as fast as possible.
             
             For single pair analysis, format your response as:
             Risk Score: [1-10]
@@ -344,20 +420,28 @@ class ConsensusAdvisorAgent(BaseAgent):
         """)
 
     def get_consensus(self, analyses):
-        """Generate a consensus view from multiple analyses"""
-        # Format the analyses for the language model
-        prompt = "Synthesize the following analyses into a unified trading view:\n\n"
-        
-        if "Financial Analysis" in analyses:
-            prompt += "=== FINANCIAL ANALYSIS ===\n"
-            prompt += analyses["Financial Analysis"] + "\n\n"
-            
-        if "Risk Assessment" in analyses:
-            prompt += "=== RISK ASSESSMENT ===\n"
-            prompt += analyses["Risk Assessment"] + "\n\n"
-            
-        if "Technical Analysis" in analyses:
-            prompt += "=== TECHNICAL ANALYSIS ===\n"
-            prompt += analyses["Technical Analysis"] + "\n\n"
-            
+        """Generate a consensus view from multiple analyses (ingest all agent insights)."""
+        prompt = "Synthesize the following analyses into a unified, conflict-resolved trading view with explicit confidence and action points.\n\n"
+
+        # Include all analyses present, preserving their labels
+        ordered_keys = [
+            "Trader's Analysis",
+            "Risk Assessment",
+            "Technical Analysis",
+            "Financial Analysis",
+            "Market Sentiment",
+            "Macro Environment",
+            "On-Chain Metrics",
+            "Liquidity Analysis",
+            "Correlation Analysis"
+        ]
+        # Append any additional keys not listed above
+        for key in list(analyses.keys()):
+            if key not in ordered_keys and key != "Consensus Summary":
+                ordered_keys.append(key)
+
+        for key in ordered_keys:
+            if key in analyses and isinstance(analyses[key], str):
+                prompt += f"=== {key.upper()} ===\n{analyses[key]}\n\n"
+
         return self.get_response(prompt)

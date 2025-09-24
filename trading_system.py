@@ -16,6 +16,7 @@ from agents.specialized_agents import (
     LiquidityAnalysisAgent,
     CorrelationAnalysisAgent
 )
+from agents.rl_agent import RLForecastAgent
 from wallet import Wallet
 
 from state_manager import StateManager
@@ -63,6 +64,9 @@ class TradingSystem:
         
         # Consensus advisor (synthesizes all analyses)
         self.consensus_advisor = ConsensusAdvisorAgent(together_key)
+
+        # RL + LSTM forecast agent (optional, uses CSV history)
+        self.rl_forecast_agent = RLForecastAgent(csv_path='market_data.csv')
         
         # Automatic initial BTC purchase only if:
         # 1. auto_buy_btc is enabled
@@ -194,6 +198,47 @@ class TradingSystem:
                 market_data[symbol] = data
         
         return market_data
+
+    def save_all_market_data_csv(self, filepath='market_data.csv'):
+        """Fetch all market data and append to a CSV snapshot (one row per symbol)."""
+        try:
+            market_data = self.get_all_market_data()
+            if not market_data:
+                return False
+
+            import pandas as pd
+            from datetime import datetime
+            rows = []
+            timestamp = int(pd.Timestamp.utcnow().timestamp() * 1000)
+            for symbol, data in market_data.items():
+                rows.append({
+                    'timestamp': timestamp,
+                    'symbol': symbol,
+                    'open': data.get('open'),
+                    'high': data.get('high'),
+                    'low': data.get('low'),
+                    'close': data.get('close'),
+                    'volume': data.get('volume'),
+                    'RSI': data.get('RSI'),
+                    'SMA_20': data.get('SMA_20'),
+                    'SMA_50': data.get('SMA_50'),
+                    'MACD': data.get('MACD'),
+                    'MACD_SIGNAL': data.get('MACD_SIGNAL'),
+                    'MACD_HIST': data.get('MACD_HIST'),
+                    'price_change_24h': data.get('price_change_24h')
+                })
+
+            df = pd.DataFrame(rows)
+            # Append or create
+            import os
+            if os.path.exists(filepath):
+                df.to_csv(filepath, mode='a', header=False, index=False)
+            else:
+                df.to_csv(filepath, index=False)
+            return True
+        except Exception as e:
+            print(f"Error saving market data CSV: {e}")
+            return False
         
     def get_market_overview(self):
         """
@@ -358,6 +403,21 @@ class TradingSystem:
                 analyses["Consensus Summary"] = self.consensus_advisor.get_consensus(analyses)
             except Exception as e:
                 analyses["Consensus Summary"] = f"Error generating consensus: {str(e)}"
+
+            # Pass the consensus summary back into the trader for a final plan
+            try:
+                consensus_text = analyses.get("Consensus Summary", "")
+                if isinstance(consensus_text, str):
+                    final_trader_plan = self.trader.get_trade_from_consensus(consensus_text, market_data, multi_pair)
+                    analyses["Trader's Final Plan"] = final_trader_plan
+            except Exception as e:
+                analyses["Trader's Final Plan"] = f"Error generating final plan: {str(e)}"
+
+            # RL Forecast agent analysis (uses CSV history if available)
+            try:
+                analyses["RL Forecast"] = self.rl_forecast_agent.get_response(market_data, multi_pair)
+            except Exception as e:
+                analyses["RL Forecast"] = f"Error in RL Forecast: {str(e)}"
             
             # Extract and execute trades automatically if analyzing all pairs
             if multi_pair:
