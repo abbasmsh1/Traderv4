@@ -1,18 +1,34 @@
 {
     "initial_balance_usd": 100.0,
-    "current_balance_usd": 39.516196199999996,
+    "current_balance_usd": 4.30516961382907,
     "positions": {
         "BTCUSDT": {
-            "amount": 0.00018,
+            "amount": 9e-05,
             "avg_price": 113640.91
         },
         "AGIXUSDT": {
-            "amount": 32.6,
+            "amount": 65.2,
             "avg_price": 0.6141
         },
         "GMXUSDT": {
             "amount": 1.133,
             "avg_price": 17.66
+        },
+        "MATICUSDT": {
+            "amount": 13.2,
+            "avg_price": 0.3795080408939681
+        },
+        "PERPUSDT": {
+            "amount": 35.64,
+            "avg_price": 0.2807911660379436
+        },
+        "ICPUSDT": {
+            "amount": 1.21,
+            "avg_price": 4.14286337111174
+        },
+        "GALAUSDT": {
+            "amount": 342.2,
+            "avg_price": 0.014619034070686336
         }
     },
     "trade_history": [
@@ -42,8 +58,77 @@
             "price": 17.66,
             "value_usd": 20.00878,
             "balance_after": 39.516196199999996
+        },
+        {
+            "timestamp": 1758749271876,
+            "symbol": "AGIXUSDT",
+            "side": "buy",
+            "amount": 32.6,
+            "price": 0.6141,
+            "value_usd": 20.019660000000002,
+            "balance_after": 19.496536199999994
+        },
+        {
+            "timestamp": 1758797818433,
+            "symbol": "MATICUSDT",
+            "side": "buy",
+            "amount": 13.2,
+            "price": 0.3795080408939681,
+            "value_usd": 5.009506139800378,
+            "fees_usd": 0.005009506139800378,
+            "balance_after": 14.482020554059815
+        },
+        {
+            "timestamp": 1758798603777,
+            "symbol": "PERPUSDT",
+            "side": "buy",
+            "amount": 17.83,
+            "price": 0.2806604574685134,
+            "value_usd": 5.004175956663594,
+            "fees_usd": 0.005004175956663593,
+            "balance_after": 9.472840421439557
+        },
+        {
+            "timestamp": 1758798811247,
+            "symbol": "PERPUSDT",
+            "side": "buy",
+            "amount": 17.81,
+            "price": 0.2809220213884736,
+            "value_usd": 5.0032212009287145,
+            "fees_usd": 0.005003221200928714,
+            "balance_after": 4.464615999309913
+        },
+        {
+            "timestamp": 1758826750418,
+            "symbol": "BTCUSDT",
+            "side": "sell",
+            "amount": 9e-05,
+            "price": 109732.70215427938,
+            "value_usd": 9.875943193885146,
+            "fees_usd": 0.009875943193885146,
+            "balance_after": 14.330683250001174
+        },
+        {
+            "timestamp": 1758828261982,
+            "symbol": "ICPUSDT",
+            "side": "buy",
+            "amount": 1.21,
+            "price": 4.14286337111174,
+            "value_usd": 5.012864679045205,
+            "fees_usd": 0.005012864679045205,
+            "balance_after": 9.312805706276922
+        },
+        {
+            "timestamp": 1758828263338,
+            "symbol": "GALAUSDT",
+            "side": "buy",
+            "amount": 342.2,
+            "price": 0.014619034070686336,
+            "value_usd": 5.002633458988864,
+            "fees_usd": 0.0050026334589888645,
+            "balance_after": 4.30516961382907
         }
     ],
     "start_time": 1758727392734,
-    "last_saved": "2025-09-24T23:24:34.408348"
+    "last_saved": "2025-09-25T21:24:23.339298"
 }

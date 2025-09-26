@@ -68,16 +68,21 @@ class TradingSystem:
         # RL + LSTM forecast agent (optional, uses CSV history)
         self.rl_forecast_agent = RLForecastAgent(csv_path='market_data.csv')
         
+        # Scalping configuration (micro profits, quick losses)
+        self.scalp_take_profit_pct = 0.0025  # 0.25%
+        self.scalp_stop_loss_pct = 0.0015    # 0.15%
+        
         # Automatic initial BTC purchase only if:
         # 1. auto_buy_btc is enabled
         # 2. No saved state was loaded
         # 3. No positions exist in the wallet
+        # 4. Balance is at least $5 (minimum order size)
         if (auto_buy_btc and 
             saved_state is None and 
             not self.wallet.positions and 
-            self.wallet.current_balance_usd >= 20.0):
+            self.wallet.current_balance_usd >= 5.0):
             print("Making initial BTC purchase...")
-            self.execute_trade('BTCUSDT', 'BUY', 20.0)
+            self.execute_trade('BTCUSDT', 'BUY', 5.0)
         
     def reset_system(self, initial_balance_usd=100.0):
         """Reset the trading system to initial state"""
@@ -307,9 +312,9 @@ class TradingSystem:
             if price_diff_pct <= 0.01:  # Within 1% of recommended entry
                 available_usd = self.wallet.current_balance_usd
                 
-                if action == 'buy' and available_usd >= 20:
-                    # Use 20% of available balance or $20, whichever is larger
-                    trade_amount = max(available_usd * 0.2, 20)
+                if action == 'buy' and available_usd >= 5:
+                    # Use 10% of available balance or $5 minimum, whichever is larger (scalping)
+                    trade_amount = max(available_usd * 0.1, 5)
                     self.execute_trade(symbol, action, trade_amount)
                     
                 elif action == 'sell' and symbol in self.wallet.positions:
@@ -428,67 +433,118 @@ class TradingSystem:
             
         except Exception as e:
             return f"Error in market analysis: {str(e)}"
+    
+    def manage_open_positions(self):
+        """
+        Scalping manager: close positions quickly for micro-profits or small losses.
+        Sells 100% of position when thresholds are met.
+        """
+        try:
+            symbols = list(self.wallet.positions.keys())
+            for symbol in symbols:
+                try:
+                    pos = self.wallet.positions.get(symbol)
+                    if not pos:
+                        continue
+                    avg_price = float(pos.get('avg_price', 0) or 0)
+                    if avg_price <= 0:
+                        continue
+                    # Current price
+                    ticker = self.client.get_symbol_ticker(symbol=symbol)
+                    current_price = float(ticker['price'])
+                    pnl_pct = (current_price - avg_price) / avg_price
+                    # Decide action
+                    if pnl_pct >= self.scalp_take_profit_pct or pnl_pct <= -self.scalp_stop_loss_pct:
+                        # Sell full position
+                        amount_base = pos.get('amount', 0.0)
+                        if amount_base <= 0:
+                            continue
+                        amount_usd = amount_base * current_price
+                        self.execute_trade(symbol, 'sell', amount_usd)
+                except Exception as e:
+                    print(f"Scalp manager error for {symbol}: {e}")
+        except Exception as e:
+            print(f"Scalp manager error: {e}")
         
     def execute_trade(self, symbol, side, amount_usd):
         """
-        Execute a virtual trade using real market data
+        Execute a virtual trade using real market data with realistic conditions
         """
         try:
             # Get real-time price from Binance
             ticker = self.client.get_symbol_ticker(symbol=symbol)
             current_price = float(ticker['price'])
             
-            # Get symbol information for precision
+            # Get symbol information for precision and minimum order size
             info = self.client.get_symbol_info(symbol)
             lot_size_filter = next((x for x in info['filters'] if x['filterType'] == 'LOT_SIZE'), None)
+            min_notional_filter = next((x for x in info['filters'] if x['filterType'] == 'MIN_NOTIONAL'), None)
+            
             step_size = float(lot_size_filter['stepSize'])
             qty_precision = len(str(step_size).split('.')[-1])
+            min_notional = float(min_notional_filter['minNotional']) if min_notional_filter else 5.0
             
             # Calculate quantity based on USD amount
             quantity = amount_usd / current_price
             quantity = round(quantity, qty_precision)
             
-            # Check if we can execute the virtual trade
-            if not self.wallet.can_execute_trade(symbol, side, amount_usd):
-                raise Exception(f"Insufficient virtual funds for {side} trade of {amount_usd} USD")
+            # Apply realistic slippage (0.01% to 0.1% for liquid pairs)
+            import random
+            slippage_factor = random.uniform(0.0001, 0.001)  # 0.01% to 0.1%
+            if side.lower() == 'buy':
+                execution_price = current_price * (1 + slippage_factor)
+            else:
+                execution_price = current_price * (1 - slippage_factor)
             
-            # Create virtual order with real market price
+            # Calculate realistic trading fees (0.1% maker/taker)
+            trade_value = quantity * execution_price
+            fees_usd = trade_value * 0.001  # 0.1% fee
+            
+            # Check minimum order value
+            if trade_value < min_notional:
+                raise Exception(f"Order value ${trade_value:.2f} below minimum ${min_notional:.2f} for {symbol}")
+            
+            # Check if we can execute the virtual trade
+            can_trade, error_msg = self.wallet.can_execute_trade(symbol, side, trade_value)
+            if not can_trade:
+                raise Exception(error_msg or f"Insufficient virtual funds for {side} trade of ${trade_value:.2f}")
+            
+            # Create virtual order with realistic execution
             import time
             order = {
                 'symbol': symbol,
                 'side': side.upper(),
                 'status': 'FILLED',
                 'executedQty': str(quantity),
-                'fills': [{'price': str(current_price)}],
+                'fills': [{'price': str(execution_price)}],
                 'transactTime': int(time.time() * 1000),
-                'type': 'VIRTUAL'  # Mark as virtual trade
+                'type': 'VIRTUAL',
+                'fees': fees_usd,
+                'slippage': slippage_factor
             }
             
-            # Update virtual wallet
+            # Update virtual wallet with fees
             self.wallet.update_after_trade(
                 symbol=symbol,
                 side=side,
                 amount=float(order['executedQty']),
                 price=float(order['fills'][0]['price']),
-                timestamp=order['transactTime']
+                timestamp=order['transactTime'],
+                fees_usd=fees_usd
             )
             
-            print(f"Virtual {side.upper()} order executed: {quantity} {symbol} @ ${current_price}")
+            print(f"Virtual {side.upper()} order executed: {quantity} {symbol} @ ${execution_price:.4f} (fees: ${fees_usd:.2f}, slippage: {slippage_factor:.4f})")
             
             # Save system state after successful trade
             self.save_system_state()
             
             return order
             
-        except Exception as e:
-            print(f"Error executing virtual trade: {e}")
-            return None
-            
         except BinanceAPIException as e:
             print(f"Error executing trade: {e}")
             return None
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Error executing virtual trade: {e}")
             return None
             
     def get_wallet_summary(self):

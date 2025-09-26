@@ -140,10 +140,12 @@ trade_interval = st.sidebar.slider("Analysis Interval (minutes)", 1, 60, 5)
 st.sidebar.subheader("Strategy Parameters")
 st.sidebar.info("""
 Autonomous Trading Rules:
-- Initial $20 BTC purchase
+- Initial $5 BTC purchase (minimum order size)
 - Uses 20% of available balance for new positions
 - Sells 50% of existing positions when sell signal
 - Executes within 1% of recommended price
+- 0.1% trading fees applied
+- Realistic slippage simulation
 - Analysis every {} minutes
 """.format(trade_interval))
 
@@ -448,6 +450,9 @@ if auto_trade:
                         st.write(agent_analysis)
             else:
                 st.error(str(analysis))
+            
+            # Run scalping position manager after analysis
+            st.session_state.trading_system.manage_open_positions()
     
     # Schedule next update
     time.sleep(1)

@@ -22,22 +22,26 @@ class Wallet:
         self.virtual_mode = True  # Always true as we're using virtual trading
         
     def can_execute_trade(self, symbol, side, amount_usd):
-        """Check if there's enough balance to execute a trade"""
+        """Check if there's enough balance to execute a trade with realistic constraints"""
         if side.lower() == 'buy':
-            return self.current_balance_usd >= amount_usd
+            # Minimum $5 buy limit like Binance
+            if amount_usd < 5.0:
+                return False, f"Minimum buy amount is $5.00 (attempted: ${amount_usd:.2f})"
+            return self.current_balance_usd >= amount_usd, None
         elif side.lower() == 'sell':
             if symbol not in self.positions:
-                return False
-            return True
-        return False
+                return False, f"No position found for {symbol}"
+            return True, None
+        return False, "Invalid trade side"
     
-    def update_after_trade(self, symbol, side, amount, price, timestamp):
-        """Update wallet after a successful trade"""
+    def update_after_trade(self, symbol, side, amount, price, timestamp, fees_usd=0.0):
+        """Update wallet after a successful trade with realistic fees"""
         trade_value_usd = amount * price
         
         if side.lower() == 'buy':
-            # Deduct from USD balance
-            self.current_balance_usd -= trade_value_usd
+            # Deduct from USD balance (including fees)
+            total_cost = trade_value_usd + fees_usd
+            self.current_balance_usd -= total_cost
             # Add to positions
             if symbol in self.positions:
                 current_amount = self.positions[symbol]['amount']
@@ -55,8 +59,9 @@ class Wallet:
                 }
         
         elif side.lower() == 'sell':
-            # Add to USD balance
-            self.current_balance_usd += trade_value_usd
+            # Add to USD balance (minus fees)
+            net_proceeds = trade_value_usd - fees_usd
+            self.current_balance_usd += net_proceeds
             # Remove from positions
             if symbol in self.positions:
                 current_amount = self.positions[symbol]['amount']
@@ -73,6 +78,7 @@ class Wallet:
             'amount': amount,
             'price': price,
             'value_usd': trade_value_usd,
+            'fees_usd': fees_usd,
             'balance_after': self.current_balance_usd
         })
     
