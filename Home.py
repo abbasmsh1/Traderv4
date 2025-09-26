@@ -51,11 +51,22 @@ if coin_category == "Major Coins":
         "BNBUSDT",  # Binance Coin
         "SOLUSDT",  # Solana
         "ADAUSDT",  # Cardano
+        "XRPUSDT",  # XRP
+        "TRXUSDT",  # TRON
+        "LTCUSDT",  # Litecoin
+        "BCHUSDT",  # Bitcoin Cash
         "DOTUSDT",  # Polkadot
         "MATICUSDT", # Polygon
         "AVAXUSDT",  # Avalanche
         "LINKUSDT",  # Chainlink
-        "ATOMUSDT"   # Cosmos
+        "ATOMUSDT",  # Cosmos
+        "FILUSDT",   # Filecoin
+        "NEARUSDT",  # NEAR Protocol
+        "ARBUSDT",   # Arbitrum
+        "OPUSDT",    # Optimism
+        "SUIUSDT",   # Sui
+        "SEIUSDT",   # Sei
+        "RUNEUSDT"   # THORChain
     ]
 elif coin_category == "Meme Coins":
     available_symbols = [
@@ -63,7 +74,9 @@ elif coin_category == "Meme Coins":
         "SHIBUSDT",  # Shiba Inu
         "PEPEUSDT",  # Pepe
         "FLOKIUSDT", # Floki
-        "INJUSDT",   # Injective
+        "BONKUSDT",  # Bonk
+        "WIFUSDT",   # dogwifhat
+        "MEMEUSDT",  # Memecoin
         "GMTUSDT",   # STEPN
         "GALAUSDT",  # Gala Games
         "APTUSDT",   # Aptos
@@ -84,51 +97,20 @@ else:
     available_symbols = [
         # Major Coins
         "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "ADAUSDT",
-        "DOTUSDT", "MATICUSDT", "AVAXUSDT", "LINKUSDT", "ATOMUSDT",
+        "XRPUSDT", "TRXUSDT", "LTCUSDT", "BCHUSDT", "DOTUSDT",
+        "MATICUSDT", "AVAXUSDT", "LINKUSDT", "ATOMUSDT", "FILUSDT",
+        "NEARUSDT", "ARBUSDT", "OPUSDT", "SUIUSDT", "SEIUSDT", "RUNEUSDT",
         # Meme/Alt Coins
-        "DOGEUSDT", "SHIBUSDT", "PEPEUSDT", "FLOKIUSDT", "INJUSDT",
-        "GMTUSDT", "GALAUSDT", "APTUSDT", "IMXUSDT", "MASKUSDT",
-        "FETUSDT", "AGIXUSDT", "ICPUSDT", "JASMYUSDT", "GMXUSDT",
-        "CHZUSDT", "PERPUSDT", "STXUSDT", "REEFUSDT", "TRUUSDT"
+        "DOGEUSDT", "SHIBUSDT", "PEPEUSDT", "FLOKIUSDT", "BONKUSDT",
+        "WIFUSDT", "MEMEUSDT", "GMTUSDT", "GALAUSDT", "APTUSDT",
+        "IMXUSDT", "MASKUSDT", "FETUSDT", "AGIXUSDT", "ICPUSDT",
+        "JASMYUSDT", "GMXUSDT", "CHZUSDT", "PERPUSDT", "STXUSDT",
+        "REEFUSDT", "TRUUSDT"
     ]
 
 symbol = st.sidebar.selectbox(
     "Select Trading Pair",
-    [
-        # Major Cryptocurrencies
-        "BTCUSDT",   # Bitcoin
-        "ETHUSDT",   # Ethereum
-        "BNBUSDT",   # Binance Coin
-        "SOLUSDT",   # Solana
-        "ADAUSDT",   # Cardano
-        "DOTUSDT",   # Polkadot
-        "MATICUSDT", # Polygon
-        "AVAXUSDT",  # Avalanche
-        "LINKUSDT",  # Chainlink
-        "ATOMUSDT",  # Cosmos
-        
-        # Meme Coins and Community Tokens
-        "DOGEUSDT",  # Dogecoin
-        "SHIBUSDT",  # Shiba Inu
-        "PEPEUSDT",  # Pepe
-        "FLOKIUSDT", # Floki
-        "BONKUSDT",  # Bonk
-        "WOJAKUSDT", # Wojak
-        "CATUSDT",   # CatCoin
-        "BABYDOGEUSDT", # Baby Doge
-        "SAFEMOONUSDT", # SafeMoon
-        "KISHUUSDT", # Kishu Inu
-        "SAMOUSDT",  # Samoyedcoin
-        "ELONUS",    # Dogelon Mars
-        "MOONUSDT",  # MoonCoin
-        "HAMSTERUSDT", # HamsterCoin
-        "CORGIUS",   # CorgiCoin
-        "PAWUSDT",   # PawSwap
-        "CATGIRLUS", # CatGirl
-        "MEMEUSDT",  # Memecoin
-        "WSHIBUSDT", # Wrapped SHIB
-        "AKITAUSDT"  # Akita Inu
-    ]
+    available_symbols
 )
 
 # Autonomous Trading Controls

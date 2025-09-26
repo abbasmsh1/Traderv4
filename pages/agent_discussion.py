@@ -42,11 +42,29 @@ with col1:
             # Get market data for all pairs
             market_data = st.session_state.trading_system.get_all_market_data()
             
+            # Build prompts as strings for each agent
+            import json as _json
+            def _format_prompt(agent, md):
+                base = agent.system_message.content if getattr(agent, 'system_message', None) else ""
+                return f"""
+{base}
+
+Current Market Data:
+{_json.dumps(md, indent=2)}
+
+Provide your analysis based on this market data.
+"""
+
+            trader_prompt = _format_prompt(st.session_state.trading_system.trader, market_data)
+            risk_prompt = _format_prompt(st.session_state.trading_system.risk_advisor, market_data)
+            technical_prompt = _format_prompt(st.session_state.trading_system.graph_analyst, market_data)
+            financial_prompt = _format_prompt(st.session_state.trading_system.financial_advisor, market_data)
+
             # Get individual analyses
-            trader_analysis = st.session_state.trading_system.trader.get_response(market_data, True)
-            risk_analysis = st.session_state.trading_system.risk_advisor.get_response(market_data, True)
-            technical_analysis = st.session_state.trading_system.graph_analyst.get_response(market_data, True)
-            financial_analysis = st.session_state.trading_system.financial_advisor.get_response(market_data, True)
+            trader_analysis = st.session_state.trading_system.trader.get_response(trader_prompt)
+            risk_analysis = st.session_state.trading_system.risk_advisor.get_response(risk_prompt)
+            technical_analysis = st.session_state.trading_system.graph_analyst.get_response(technical_prompt)
+            financial_analysis = st.session_state.trading_system.financial_advisor.get_response(financial_prompt)
             
             # Create discussion entry
             discussion = {

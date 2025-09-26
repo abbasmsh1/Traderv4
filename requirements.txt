@@ -1,6 +1,6 @@
 python-binance==1.0.19
 langchain==0.0.350
-together==0.2.8
+mistralai>=0.4.0
 python-dotenv==1.0.0
 pandas==2.1.1
 numpy==1.26.0

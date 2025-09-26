@@ -48,22 +48,22 @@ class TradingSystem:
         self.wallet = Wallet(initial_balance_usd, state=saved_state)
         
         # Initialize agents
-        together_key = os.getenv('TOGETHER_API_KEY')
+        mistral_key = os.getenv('MISTRAL_API_KEY')
         # Core trading agents
-        self.trader = TraderAgent(together_key)
-        self.risk_advisor = RiskAdvisorAgent(together_key)
-        self.graph_analyst = GraphAnalystAgent(together_key)
-        self.financial_advisor = FinancialAdvisorAgent(together_key)
+        self.trader = TraderAgent(mistral_key)
+        self.risk_advisor = RiskAdvisorAgent(mistral_key)
+        self.graph_analyst = GraphAnalystAgent(mistral_key)
+        self.financial_advisor = FinancialAdvisorAgent(mistral_key)
         
         # Specialized analysis agents
-        self.sentiment_analyst = SentimentAnalysisAgent(together_key)
-        self.macro_analyst = MacroEconomicAgent(together_key)
-        self.onchain_analyst = OnChainAnalysisAgent(together_key)
-        self.liquidity_analyst = LiquidityAnalysisAgent(together_key)
-        self.correlation_analyst = CorrelationAnalysisAgent(together_key)
+        self.sentiment_analyst = SentimentAnalysisAgent(mistral_key)
+        self.macro_analyst = MacroEconomicAgent(mistral_key)
+        self.onchain_analyst = OnChainAnalysisAgent(mistral_key)
+        self.liquidity_analyst = LiquidityAnalysisAgent(mistral_key)
+        self.correlation_analyst = CorrelationAnalysisAgent(mistral_key)
         
         # Consensus advisor (synthesizes all analyses)
-        self.consensus_advisor = ConsensusAdvisorAgent(together_key)
+        self.consensus_advisor = ConsensusAdvisorAgent(mistral_key)
 
         # RL + LSTM forecast agent (optional, uses CSV history)
         self.rl_forecast_agent = RLForecastAgent(csv_path='market_data.csv')
@@ -150,11 +150,22 @@ class TradingSystem:
                 "BNBUSDT",  # Binance Coin
                 "SOLUSDT",  # Solana
                 "ADAUSDT",  # Cardano
+                "XRPUSDT",  # XRP
+                "TRXUSDT",  # TRON
+                "LTCUSDT",  # Litecoin
+                "BCHUSDT",  # Bitcoin Cash
                 "DOTUSDT",  # Polkadot
                 "MATICUSDT", # Polygon
                 "AVAXUSDT", # Avalanche
                 "LINKUSDT", # Chainlink
-                "ATOMUSDT"  # Cosmos
+                "ATOMUSDT",  # Cosmos
+                "FILUSDT",   # Filecoin
+                "NEARUSDT",  # NEAR Protocol
+                "ARBUSDT",   # Arbitrum
+                "OPUSDT",    # Optimism
+                "SUIUSDT",   # Sui
+                "SEIUSDT",   # Sei
+                "RUNEUSDT"   # THORChain
             ]
             
             # Meme coins and community tokens (verified on Binance)
@@ -163,7 +174,9 @@ class TradingSystem:
                 "SHIBUSDT",  # Shiba Inu
                 "PEPEUSDT",  # Pepe
                 "FLOKIUSDT", # Floki
-                "INJUSDT",   # Injective (New DeFi meme)
+                "BONKUSDT",  # Bonk
+                "WIFUSDT",   # dogwifhat
+                "MEMEUSDT",  # Memecoin
                 "GMTUSDT",   # STEPN
                 "GALAUSDT",  # Gala Games
                 "APTUSDT",   # Aptos
@@ -329,6 +342,60 @@ class TradingSystem:
         If symbol is None, analyze all pairs
         """
         try:
+            def _format_prompt(agent, md, multi_pair_flag):
+                try:
+                    base = agent.system_message.content if hasattr(agent, 'system_message') and agent.system_message else ""
+                except Exception:
+                    base = ""
+                if not multi_pair_flag:
+                    formatted = {
+                        "price_data": {
+                            "close": float(md.get("close", 0)),
+                            "open": float(md.get("open", 0)),
+                            "high": float(md.get("high", 0)),
+                            "low": float(md.get("low", 0)),
+                            "volume": float(md.get("volume", 0)),
+                        },
+                        "indicators": {
+                            "RSI": float(md.get("RSI", 0)),
+                            "SMA_20": float(md.get("SMA_20", 0)),
+                            "SMA_50": float(md.get("SMA_50", 0)),
+                            "MACD": float(md.get("MACD", 0)),
+                            "MACD_SIGNAL": float(md.get("MACD_SIGNAL", 0)),
+                            "MACD_HIST": float(md.get("MACD_HIST", 0)),
+                            "price_change_24h": float(md.get("price_change_24h", 0)),
+                        },
+                    }
+                else:
+                    formatted = {}
+                    for sym, data in md.items():
+                        formatted[sym] = {
+                            "price_data": {
+                                "close": float(data.get("close", 0)),
+                                "open": float(data.get("open", 0)),
+                                "high": float(data.get("high", 0)),
+                                "low": float(data.get("low", 0)),
+                                "volume": float(data.get("volume", 0)),
+                            },
+                            "indicators": {
+                                "RSI": float(data.get("RSI", 0)),
+                                "SMA_20": float(data.get("SMA_20", 0)),
+                                "SMA_50": float(data.get("SMA_50", 0)),
+                                "MACD": float(data.get("MACD", 0)),
+                                "MACD_SIGNAL": float(data.get("MACD_SIGNAL", 0)),
+                                "MACD_HIST": float(data.get("MACD_HIST", 0)),
+                                "price_change_24h": float(data.get("price_change_24h", 0)),
+                            },
+                        }
+                import json as _json
+                return f"""
+{base}
+
+Current Market Data:
+{_json.dumps(formatted, indent=2)}
+
+Provide your analysis based on this market data.
+"""
             # Get market data
             if symbol:
                 market_data = self.get_market_data(symbol)
@@ -358,48 +425,57 @@ class TradingSystem:
             
             # Core analyses
             try:
-                analyses["Trader's Analysis"] = self.trader.get_response(market_data, multi_pair)
+                prompt = _format_prompt(self.trader, market_data, multi_pair)
+                analyses["Trader's Analysis"] = self.trader.get_response(prompt)
             except Exception as e:
                 analyses["Trader's Analysis"] = f"Error: {str(e)}"
                 
             try:
-                analyses["Risk Assessment"] = self.risk_advisor.get_response(market_data, multi_pair)
+                prompt = _format_prompt(self.risk_advisor, market_data, multi_pair)
+                analyses["Risk Assessment"] = self.risk_advisor.get_response(prompt)
             except Exception as e:
                 analyses["Risk Assessment"] = f"Error: {str(e)}"
                 
             try:
-                analyses["Technical Analysis"] = self.graph_analyst.get_response(market_data, multi_pair)
+                prompt = _format_prompt(self.graph_analyst, market_data, multi_pair)
+                analyses["Technical Analysis"] = self.graph_analyst.get_response(prompt)
             except Exception as e:
                 analyses["Technical Analysis"] = f"Error: {str(e)}"
                 
             try:
-                analyses["Financial Analysis"] = self.financial_advisor.get_response(market_data, multi_pair)
+                prompt = _format_prompt(self.financial_advisor, market_data, multi_pair)
+                analyses["Financial Analysis"] = self.financial_advisor.get_response(prompt)
             except Exception as e:
                 analyses["Financial Analysis"] = f"Error: {str(e)}"
                 
             # Specialized analyses
             try:
-                analyses["Market Sentiment"] = self.sentiment_analyst.get_response(market_data, multi_pair)
+                prompt = _format_prompt(self.sentiment_analyst, market_data, multi_pair)
+                analyses["Market Sentiment"] = self.sentiment_analyst.get_response(prompt)
             except Exception as e:
                 analyses["Market Sentiment"] = f"Error: {str(e)}"
                 
             try:
-                analyses["Macro Environment"] = self.macro_analyst.get_response(market_data, multi_pair)
+                prompt = _format_prompt(self.macro_analyst, market_data, multi_pair)
+                analyses["Macro Environment"] = self.macro_analyst.get_response(prompt)
             except Exception as e:
                 analyses["Macro Environment"] = f"Error: {str(e)}"
                 
             try:
-                analyses["On-Chain Metrics"] = self.onchain_analyst.get_response(market_data, multi_pair)
+                prompt = _format_prompt(self.onchain_analyst, market_data, multi_pair)
+                analyses["On-Chain Metrics"] = self.onchain_analyst.get_response(prompt)
             except Exception as e:
                 analyses["On-Chain Metrics"] = f"Error: {str(e)}"
                 
             try:
-                analyses["Liquidity Analysis"] = self.liquidity_analyst.get_response(market_data, multi_pair)
+                prompt = _format_prompt(self.liquidity_analyst, market_data, multi_pair)
+                analyses["Liquidity Analysis"] = self.liquidity_analyst.get_response(prompt)
             except Exception as e:
                 analyses["Liquidity Analysis"] = f"Error: {str(e)}"
                 
             try:
-                analyses["Correlation Analysis"] = self.correlation_analyst.get_response(market_data, multi_pair)
+                prompt = _format_prompt(self.correlation_analyst, market_data, multi_pair)
+                analyses["Correlation Analysis"] = self.correlation_analyst.get_response(prompt)
             except Exception as e:
                 analyses["Correlation Analysis"] = f"Error: {str(e)}"
                 

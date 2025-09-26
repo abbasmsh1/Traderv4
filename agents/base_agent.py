@@ -1,91 +1,39 @@
-from langchain_together import Together
+import os
+from typing import Optional
+from mistralai import Mistral
 from langchain.schema import SystemMessage
-from langchain.globals import set_verbose
-import json
-
-# Set verbosity globally
-set_verbose(False)
+import dotenv
+dotenv.load_dotenv()
 
 class BaseAgent:
-    def __init__(self, api_key):
-        # LLM is optional to support non-LLM agents
-        if api_key:
-            self.llm = Together(
-                model="mistralai/Mixtral-8x7B-Instruct-v0.1",
-                temperature=0.7,
-                together_api_key=api_key,
-                max_tokens=2048
-            )
-        else:
-            self.llm = None
-        self.system_message = None
-        
-    def get_response(self, market_data, multi_pair=False):
-        """
-        Get agent's response based on market data
-        Args:
-            market_data (dict): Current market data including price, volume, indicators, etc.
-            multi_pair (bool): Whether the data contains multiple pairs
-        Returns:
-            str: Agent's analysis and recommendation
-        """
-        if not self.system_message:
-            raise NotImplementedError("System message must be defined in child class")
-        
-        if not multi_pair:
-            # Format single pair market data
-            formatted_data = {
-                "price_data": {
-                    "close": float(market_data.get("close", 0)),
-                    "open": float(market_data.get("open", 0)),
-                    "high": float(market_data.get("high", 0)),
-                    "low": float(market_data.get("low", 0)),
-                    "volume": float(market_data.get("volume", 0))
-                },
-                "indicators": {
-                    "RSI": float(market_data.get("RSI", 0)),
-                    "SMA_20": float(market_data.get("SMA_20", 0)),
-                    "SMA_50": float(market_data.get("SMA_50", 0)),
-                    "MACD": float(market_data.get("MACD", 0)),
-                    "MACD_SIGNAL": float(market_data.get("MACD_SIGNAL", 0)),
-                    "MACD_HIST": float(market_data.get("MACD_HIST", 0)),
-                    "price_change_24h": float(market_data.get("price_change_24h", 0))
-                }
-            }
-        else:
-            # Format multi-pair market data
-            formatted_data = {}
-            for symbol, data in market_data.items():
-                formatted_data[symbol] = {
-                    "price_data": {
-                        "close": float(data.get("close", 0)),
-                        "open": float(data.get("open", 0)),
-                        "high": float(data.get("high", 0)),
-                        "low": float(data.get("low", 0)),
-                        "volume": float(data.get("volume", 0))
-                    },
-                    "indicators": {
-                        "RSI": float(data.get("RSI", 0)),
-                        "SMA_20": float(data.get("SMA_20", 0)),
-                        "SMA_50": float(data.get("SMA_50", 0)),
-                        "MACD": float(data.get("MACD", 0)),
-                        "MACD_SIGNAL": float(data.get("MACD_SIGNAL", 0)),
-                        "MACD_HIST": float(data.get("MACD_HIST", 0)),
-                        "price_change_24h": float(data.get("price_change_24h", 0))
-                    }
-                }
-        
-        prompt = f"""<s>[INST] {self.system_message.content}
+    """
+    Base class for all agents.
+    Provides a connection to the Mistral API and a generic method for generating responses.
+    """
 
-Current Market Data:
-{json.dumps(formatted_data, indent=2)}
+    def __init__(self, api_key: Optional[str] = None, model: str = "mistral-large-latest"):
+        # Allow passing API key or fallback to environment; if missing, run in disabled mode
+        api_key = api_key or os.getenv('MISTRAL_API_KEY')
+        self.client = Mistral(api_key=api_key) if api_key else None
+        self.model = model
+        self.system_message: Optional[SystemMessage] = None
 
-Please provide your analysis based on this market data. [/INST]</s>"""
-        
-        if self.llm is None:
-            return "LLM disabled: missing Together API key. Set TOGETHER_API_KEY to enable this agent."
+    def get_response(self, prompt: str, temperature: float = 0.7, max_tokens: int = 1024) -> str:
+        """
+        Send a prompt to the Mistral API and return the model response.
+        """
+        if self.client is None:
+            return "LLM disabled: missing Mistral API key. Set MISTRAL_API_KEY to enable this agent."
         try:
-            response = self.llm.invoke(prompt)
-            return response
+            response = self.client.chat.complete(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": self.system_message.content if self.system_message else ""},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+            return response.choices[0].message.content
         except Exception as e:
-            return f"Error getting analysis: {str(e)}. Please check your Together API key and try again."
+            return f"Error generating response: {e}"

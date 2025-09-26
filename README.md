@@ -60,7 +60,7 @@ pip install -r requirements.txt
 ```env
 BINANCE_API_KEY=your_binance_api_key
 BINANCE_API_SECRET=your_binance_api_secret
-TOGETHER_API_KEY=your_together_api_key
+MISTRAL_API_KEY=your_mistral_api_key
 ```
 
 ## Usage
@@ -191,7 +191,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - Binance API for market data
-- Together AI for agent capabilities
+- Mistral AI for agent capabilities
 - Streamlit for dashboard framework
 - TA-Lib for technical analysis
 - LangChain for agent framework

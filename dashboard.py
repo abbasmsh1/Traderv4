@@ -25,21 +25,12 @@ st.sidebar.title("Trading Controls")
 symbol = st.sidebar.selectbox(
     "Select Trading Pair",
     [
-        "BTCUSDT",  # Bitcoin
-        "ETHUSDT",  # Ethereum
-        "BNBUSDT",  # Binance Coin
-        "ADAUSDT",  # Cardano
-        "DOTUSDT",  # Polkadot
-        "SOLUSDT",  # Solana
-        "AVAXUSDT", # Avalanche
-        "MATICUSDT", # Polygon
-        "LINKUSDT", # Chainlink
-        "ATOMUSDT", # Cosmos
-        "ALGOUSDT", # Algorand
-        "NEARUSDT", # NEAR Protocol
-        "FTMUSDT",  # Fantom
-        "SANDUSDT", # The Sandbox
-        "MANAUSDT"  # Decentraland
+        "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "ADAUSDT",
+        "XRPUSDT", "TRXUSDT", "LTCUSDT", "BCHUSDT", "DOTUSDT",
+        "MATICUSDT", "AVAXUSDT", "LINKUSDT", "ATOMUSDT", "FILUSDT",
+        "NEARUSDT", "ARBUSDT", "OPUSDT", "SUIUSDT", "SEIUSDT", "RUNEUSDT",
+        "DOGEUSDT", "SHIBUSDT", "PEPEUSDT", "FLOKIUSDT", "BONKUSDT",
+        "WIFUSDT", "MEMEUSDT", "ALGOUSDT", "FTMUSDT", "SANDUSDT", "MANAUSDT"
     ]
 )
 
@@ -162,7 +153,7 @@ if market_data:
 
 # Trade History
 st.header("Trade History")
-if wallet_summary['trade_count'] > 0:
+if wallet_summary['trade_statistics']['total_trades'] > 0:
     trades_df = pd.DataFrame(st.session_state.trading_system.wallet.trade_history)
     trades_df['timestamp'] = pd.to_datetime(trades_df['timestamp'], unit='ms')
     st.dataframe(trades_df)
